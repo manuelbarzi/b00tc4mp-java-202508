@@ -6,7 +6,7 @@ public class Data {
 
     private User[] users;
 
-    public Data() {
+    private Data() {
         users = new User[100]; // Fixed size array for simplicity
     }
 
@@ -29,7 +29,7 @@ public class Data {
         return null; // User not found
     }
 
-    public static Data getInstance() {
+    public static Data get() {
         return instance == null ? instance = new Data() : instance;
     }
 }

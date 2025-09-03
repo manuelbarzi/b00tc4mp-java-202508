@@ -2,16 +2,10 @@
 import java.awt.*;
 import javax.swing.*;
 
-public class Main {
+import error.*;
+import logic.Logic;
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new AppFrame().setVisible(true);
-        });
-    }
-}
-
-class AppFrame extends JFrame {
+public class App extends JFrame {
 
     private static final String REGISTER_VIEW = "Register";
     private static final String LOGIN_VIEW = "Login";
@@ -19,12 +13,17 @@ class AppFrame extends JFrame {
 
     private JPanel cardPanel;
     private CardLayout cardLayout;
+    private JLabel homeWelcomeLabel;
 
-    public AppFrame() {
+    private Logic logic;
+
+    public App() {
         setTitle("Simple Swing App");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Center the frame
+
+        logic = Logic.get();
 
         // Initialize CardLayout
         cardLayout = new CardLayout();
@@ -93,17 +92,33 @@ class AppFrame extends JFrame {
         panel.add(toLoginButton, gbc);
 
         // Actions
-        registerButton.addActionListener(e -> {
+        registerButton.addActionListener(event -> {
+            String name = nameField.getText();
             String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
 
-            if (!username.isEmpty()) {
+            try {
+                logic.registerUser(name, username, password);
+
+                nameField.setText("");
+                usernameField.setText("");
+                passwordField.setText("");
+
                 cardLayout.show(cardPanel, LOGIN_VIEW);
-            } else {
-                JOptionPane.showMessageDialog(this, "Please enter a username");
+            } catch (DuplicityException exception) {
+                exception.printStackTrace();
+
+                JOptionPane.showMessageDialog(this, exception.getMessage());
             }
         });
 
-        toLoginButton.addActionListener(e -> cardLayout.show(cardPanel, LOGIN_VIEW));
+        toLoginButton.addActionListener(event -> {
+            nameField.setText("");
+            usernameField.setText("");
+            passwordField.setText("");
+
+            cardLayout.show(cardPanel, LOGIN_VIEW);
+        });
 
         return panel;
     }
@@ -145,17 +160,37 @@ class AppFrame extends JFrame {
         panel.add(toRegisterButton, gbc);
 
         // Actions
-        loginButton.addActionListener(e -> {
+        loginButton.addActionListener(event -> {
             String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
 
-            if (!username.isEmpty()) {
+            try {
+                logic.loginUser(username, password);
+
+                usernameField.setText("");
+                passwordField.setText("");
+
+                String name = logic.getUserName();
+                homeWelcomeLabel.setText("Welcome, " + name + "!");
+
                 cardLayout.show(cardPanel, HOME_VIEW);
-            } else {
-                JOptionPane.showMessageDialog(this, "Please enter a username");
+            } catch (NotFoundException exception) {
+                exception.printStackTrace();
+
+                JOptionPane.showMessageDialog(this, exception.getMessage());
+            } catch (CredentialsException exception) {
+                exception.printStackTrace();
+
+                JOptionPane.showMessageDialog(this, exception.getMessage());
             }
         });
 
-        toRegisterButton.addActionListener(e -> cardLayout.show(cardPanel, REGISTER_VIEW));
+        toRegisterButton.addActionListener(event -> {
+            usernameField.setText("");
+            passwordField.setText("");
+
+            cardLayout.show(cardPanel, REGISTER_VIEW);
+        });
 
         return panel;
     }
@@ -168,7 +203,7 @@ class AppFrame extends JFrame {
         // Welcome label
         gbc.gridx = 0;
         gbc.gridy = 0;
-        panel.add(new JLabel("Welcome to the Home Page!"), gbc);
+        panel.add(homeWelcomeLabel = new JLabel("Welcome, User!"), gbc);
 
         // Logout button
         gbc.gridy = 1;
@@ -176,8 +211,14 @@ class AppFrame extends JFrame {
         panel.add(logoutButton, gbc);
 
         // Action
-        logoutButton.addActionListener(e -> cardLayout.show(cardPanel, LOGIN_VIEW));
+        logoutButton.addActionListener(event -> cardLayout.show(cardPanel, LOGIN_VIEW));
 
         return panel;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new App().setVisible(true);
+        });
     }
 }
