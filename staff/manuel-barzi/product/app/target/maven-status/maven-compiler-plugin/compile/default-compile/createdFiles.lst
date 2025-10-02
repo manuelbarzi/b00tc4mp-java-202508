@@ -1,0 +1,7 @@
+error/CredentialsException.class
+data/User.class
+error/DuplicityException.class
+logic/Logic.class
+App.class
+data/Data.class
+error/NotFoundException.class
